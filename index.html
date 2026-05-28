@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SOO BAHK DO">
+<meta name="theme-color" content="#060e22">
+<link rel="manifest" href="manifest.json">
+<title>SOO BAHK DO — Cronómetro Marcial</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Serif+KR:wght@400;700&family=Rajdhani:wght@300;400;600;700&display=swap');
+
+  :root {
+    --navy: #0d1b3e;
+    --navy-mid: #1a2d5a;
+    --navy-light: #243a70;
+    --gold: #d4a017;
+    --gold-bright: #f0c030;
+    --red: #c0392b;
+    --green: #1a7a3c;
+    --white: #f8f4ea;
+    --gray: #8899aa;
+    --bg: #060e22;
+  }
+  /* THEME: DARK RED */
+  body.theme-red {
+    --navy: #3e0d0d; --navy-mid: #5a1a1a; --navy-light: #7a2424;
+    --gold: #e05030; --gold-bright: #ff6644; --bg: #1a0505;
+  }
+  /* THEME: DARK GREEN */
+  body.theme-green {
+    --navy: #0d3e1a; --navy-mid: #1a5a2d; --navy-light: #246638;
+    --gold: #30c060; --gold-bright: #44ff88; --bg: #051a0a;
+  }
+  /* THEME: PURPLE */
+  body.theme-purple {
+    --navy: #1e0d3e; --navy-mid: #2d1a5a; --navy-light: #3d2470;
+    --gold: #9b30d4; --gold-bright: #cc66ff; --bg: #0c0518;
+  }
+  /* THEME: WHITE/DAY */
+  body.theme-day {
+    --navy: #e8ecf4; --navy-mid: #d0d8ee; --navy-light: #b8c4e0;
+    --gold: #1a56c4; --gold-bright: #0d3d9e; --bg: #f0f4ff;
+    --white: #0d1b3e; --gray: #445577;
+  }
+  body.theme-day::before, body.theme-day::after { opacity: 0.3; }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(26,45,90,0.6) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 20% 80%, rgba(13,27,62,0.4) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(212,160,23,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(212,160,23,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── TAB NAV ─── */
+  .tab-nav {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    gap: 0;
+    width: 100%;
+    max-width: 700px;
+    margin-top: 14px;
+    border-bottom: 2px solid rgba(212,160,23,0.2);
+  }
+
+  .tab-btn {
+    flex: 1;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(15px, 3.5vw, 20px);
+    letter-spacing: 3px;
+    padding: 10px 8px;
+    border: none;
+    background: transparent;
+    color: var(--gray);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .tab-btn.active {
+    color: var(--gold-bright);
+    border-bottom-color: var(--gold-bright);
+    text-shadow: 0 0 12px rgba(240,192,48,0.4);
+  }
+
+  .tab-btn:hover:not(.active) { color: var(--white); }
+
+  /* ─── VIEWS ─── */
+  .view { display: none; }
+  .view.active { display: flex; flex-direction: column; align-items: center; }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 700px;
+    padding: 16px 16px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    justify-content: center;
+    padding: 4px 0;
+  }
+
+  .logo-svg {
+    width: 58px;
+    height: 58px;
+    filter: drop-shadow(0 0 12px rgba(212,160,23,0.5));
+    flex-shrink: 0;
+  }
+
+  .header-text { text-align: left; }
+
+  .header-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(26px, 6vw, 42px);
+    letter-spacing: 4px;
+    color: var(--gold-bright);
+    text-shadow: 0 0 20px rgba(212,160,23,0.4);
+    line-height: 1;
+  }
+
+  .header-sub {
+    font-family: 'Noto Serif KR', serif;
+    font-size: clamp(9px, 2vw, 12px);
+    color: var(--gray);
+    letter-spacing: 3px;
+  }
+
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), var(--navy-light), var(--gold), transparent);
+    opacity: 0.5;
+  }
+
+  /* ══════════════════════════════
+     VISTA 1: SOLO RELOJ
+  ══════════════════════════════ */
+  .clock-view {
+    width: 100%;
+    padding: 6px 8px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 85vh;
+    gap: 6px;
+  }
+
+  .big-clock-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .clock-sep { display: none; }
+  .clock-right { display: contents; }
+
+  .big-clock-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(10px, 2vw, 13px);
+    letter-spacing: 8px;
+    color: var(--gray);
+    margin-bottom: 2px;
+  }
+
+  /* PORTRAIT — fill screen width, huge HH:MM */
+  .big-clock {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(120px, 45vw, 360px);
+    letter-spacing: -2px;
+    color: var(--gold-bright);
+    text-shadow: 0 0 60px rgba(240,192,48,0.55), 0 0 120px rgba(240,192,48,0.18);
+    line-height: 0.82;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .big-clock-seconds {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(60px, 18vw, 150px);
+    color: rgba(240,192,48,0.55);
+    letter-spacing: 4px;
+    text-align: center;
+    line-height: 0.95;
+  }
+
+  .clock-date {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(13px, 3.5vw, 24px);
+    letter-spacing: 4px;
+    color: var(--gray);
+    font-weight: 600;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  /* LANDSCAPE — HH:MM fills screen height, seconds beside */
+  @media (orientation: landscape) {
+    .clock-view {
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: 0;
+      padding: 2px 12px;
+      min-height: 100dvh;
+      height: 100dvh;
+    }
+    .big-clock-wrap {
+      flex-direction: row;
+      align-items: center;
+      gap: 0;
+    }
+    /* HH:MM takes full viewport height */
+    .big-clock {
+      font-size: clamp(80px, 88vh, 600px);
+      letter-spacing: -4px;
+      line-height: 1;
+    }
+    /* separator + seconds stacked vertically */
+    .clock-sep {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(40px, 30vh, 200px);
+      color: rgba(240,192,48,0.3);
+      line-height: 1;
+      padding: 0 4px;
+    }
+    .clock-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+    }
+    .big-clock-seconds {
+      font-size: clamp(40px, 28vh, 200px);
+      line-height: 1;
+      letter-spacing: 2px;
+    }
+    .big-clock-label { display: none; }
+    .clock-decorline { display: none; }
+    .clock-date {
+      font-size: clamp(9px, 2.5vh, 20px);
+      letter-spacing: 3px;
+      writing-mode: initial;
+    }
+    .tab-nav { display: none; }
+    #view-clock .header { display: none; }
+  }
+
+  .clock-decorline {
+    width: 260px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.35;
+  }
+
+  /* ══════════════════════════════
+     VISTA 2: CRONÓMETRO MARCIAL
+  ══════════════════════════════ */
+
+  /* RING */
+  .ring-container {
+    position: relative;
+    width: min(320px, 80vw);
+    height: min(320px, 80vw);
+  }
+
+  /* LANDSCAPE SPLIT LAYOUT */
+  .timer-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+  .timer-right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+  /* Portrait: both columns stack vertically, full width */
+  @media (orientation: portrait) {
+    .timer-left, .timer-right {
+      flex-direction: column;
+      width: 100%;
+    }
+  }
+
+  @media (orientation: landscape) {
+    /* ── Tab bar compact ── */
+    .tab-nav { padding: 0; min-height: 28px; border-bottom-width: 1px; }
+    .tab-btn  { font-size: 11px; padding: 4px 8px; letter-spacing: 2px; }
+
+    /* ── Hide portrait-only chrome ── */
+    #view-timer .header  { display: none; }
+    #view-timer .divider { display: none; }
+
+    /* ── Timer view: full width, full height ── */
+    #view-timer {
+      width: 100vw !important;
+      max-width: 100vw !important;
+    }
+
+    #view-timer .app {
+      flex-direction: row;
+      align-items: stretch;
+      width: 100vw;
+      max-width: 100vw;
+      height: calc(100dvh - 28px);
+      padding: 0;
+      gap: 0;
+      overflow: hidden;
+    }
+
+    /* ══════════════════════════════════════
+       LEFT HALF — anillo + marcador + dots
+       Fondo levemente diferente para
+       separar visualmente las dos secciones
+    ══════════════════════════════════════ */
+    .timer-left {
+      flex: 0 0 40%;
+      width: 40%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 6px 8px 6px 6px;
+      box-sizing: border-box;
+      background: rgba(0,0,0,0.18);
+      border-right: 2px solid rgba(212,160,23,0.2);
+    }
+
+    /* Ring ocupa todo el alto disponible */
+    .ring-container {
+      width:  min(39vw, calc(100dvh - 36px));
+      height: min(39vw, calc(100dvh - 36px));
+      flex-shrink: 0;
+    }
+
+    /* Texto dentro del anillo — más grande ya que tiene todo el espacio */
+    .time-big     { font-size: clamp(52px, 18vh, 120px) !important; }
+    .round-label  { font-size: clamp(10px, 2.5vh, 16px) !important; letter-spacing: 4px; }
+    .phase-label  { font-size: clamp(10px, 2.2vh, 14px) !important; letter-spacing: 3px; }
+
+    /* Marcador rojo/azul — ahora en columna derecha */
+    .scoreboard  { width: 100%; border-radius: 8px; flex-shrink: 0; }
+    .score-side  { padding: 4px 10px; }
+    .score-label { font-size: 8px; letter-spacing: 1px; }
+    .score-num   { font-size: clamp(20px, 5vh, 36px) !important; }
+    .score-side.winner-side .score-num { font-size: clamp(24px, 6vh, 42px) !important; }
+
+    /* Puntos de round — en columna derecha */
+    .round-dots { gap: 8px; flex-wrap: wrap; max-width: 100%; justify-content: center; flex-shrink: 0; }
+    .dot        { width: 28px; height: 28px; font-size: 10px; border-width: 2px; }
+
+    /* ══════════════════════════════════════
+       RIGHT HALF — parámetros + estado + botones
+    ══════════════════════════════════════ */
+    .timer-right {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 10px 8px 10px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+
+    /* ── Tamaño base unificado para todo el panel derecho ── */
+    --rp: clamp(14px, 4vh, 28px);   /* texto base */
+    --rp-val: clamp(26px, 7vh, 48px); /* valores grandes */
+    --rp-btn-h: clamp(36px, 8vh, 58px); /* altura botones/inputs */
+
+    /* Settings */
+    .settings-panel {
+      padding: 6px 8px;
+      gap: 4px;
+      grid-template-columns: repeat(3, 1fr);
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+    .setting-item  { gap: 3px; }
+    .setting-label { font-size: clamp(14px, 4vh, 28px); letter-spacing: 1px; text-transform: uppercase; }
+    .setting-value { font-size: clamp(26px, 7vh, 48px); min-width: 44px; }
+    .setting-btn   {
+      width:  clamp(36px, 8vh, 58px);
+      height: clamp(36px, 8vh, 58px);
+      font-size: clamp(22px, 5.5vh, 38px);
+      border-radius: 8px;
+    }
+
+    /* Status bar */
+    .status-bar        { padding: 5px 8px; flex-wrap: nowrap; gap: 2px; border-radius: 8px; flex-shrink: 0; }
+    .status-item       { gap: 0; }
+    .status-item-label { font-size: clamp(14px, 4vh, 28px); letter-spacing: 1px; }
+    .status-item-value { font-size: clamp(26px, 7vh, 48px); }
+
+    /* Botones */
+    .controls { gap: 6px; flex-wrap: nowrap; flex-shrink: 0; }
+    .btn      { font-size: clamp(22px, 6vh, 42px); padding: 8px 4px; border-radius: 8px; }
+    .btn-primary {
+      font-size: clamp(36px, 9vh, 64px) !important;
+      padding: clamp(10px, 2vh, 16px) 4px !important;
+      flex: 2; max-width: none; min-width: 0;
+    }
+    .btn-secondary, .btn-danger {
+      font-size: clamp(36px, 9vh, 64px);
+      padding: 8px 4px;
+      flex: 1; min-width: 0;
+    }
+    #controlsDone .btn-primary {
+      font-size: clamp(38px, 10vh, 68px) !important;
+      padding: clamp(12px, 2.5vh, 18px) 0 !important;
+      width: 100%; max-width: 100%;
+    }
+  }
+
+    /* THEME TOGGLE BUTTON */
+  .theme-toggle {
+    position: fixed;
+    top: 14px; left: 56px;
+    z-index: 20;
+    background: rgba(13,27,62,0.85);
+    border: 1px solid rgba(212,160,23,0.2);
+    border-radius: 20px;
+    padding: 6px 10px;
+    font-size: 16px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--gold); }
+
+  /* FULLSCREEN BUTTON */
+  .fs-btn {
+    position: fixed;
+    bottom: 16px; right: 16px;
+    z-index: 20;
+    background: linear-gradient(135deg, var(--gold) 0%, #b8860b 100%);
+    color: var(--navy);
+    border: none;
+    border-radius: 30px;
+    padding: 10px 20px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    box-shadow: 0 4px 18px rgba(212,160,23,0.5);
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .fs-btn:hover, .fs-btn:active {
+    box-shadow: 0 6px 26px rgba(212,160,23,0.7);
+    transform: scale(1.05);
+  }
+  .fs-btn.active {
+    background: linear-gradient(135deg, #e74c3c 0%, #922b21 100%);
+    box-shadow: 0 4px 18px rgba(231,76,60,0.5);
+  }
+
+  .ring-container svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  .ring-bg { fill: none; stroke: rgba(255,255,255,0.04); stroke-width: 14; }
+  .ring-track { fill: none; stroke: var(--navy-mid); stroke-width: 14; }
+
+  #progressRing {
+    fill: none;
+    stroke-width: 16;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.1s linear, stroke 0.3s;
+    filter: url(#glow);
+  }
+
+  .ring-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .round-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(12px, 2.8vw, 17px);
+    letter-spacing: 5px;
+    color: var(--gray);
+  }
+
+  /* NÚMEROS GRANDES — tamaño aumentado */
+  .time-big {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(72px, 20vw, 130px);
+    line-height: 0.88;
+    letter-spacing: 2px;
+    transition: color 0.3s;
+    text-shadow: 0 0 30px currentColor;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .phase-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(13px, 3vw, 17px);
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.9;
+  }
+
+  /* DOTS */
+  .round-dots { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: center; }
+
+  .dot {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 3px solid var(--navy-light);
+    background: rgba(255,255,255,0.04);
+    transition: all 0.35s;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    color: transparent;
+    position: relative;
+  }
+
+  .dot.active {
+    border-color: var(--gold-bright);
+    background: rgba(240,192,48,0.12);
+    box-shadow: 0 0 16px var(--gold-bright), 0 0 32px rgba(240,192,48,0.3);
+    animation: pulse-dot 1s ease-in-out infinite;
+  }
+
+  .dot.win-red {
+    background: #c0392b;
+    border-color: #e74c3c;
+    box-shadow: 0 0 14px rgba(192,57,43,0.7);
+    color: white;
+  }
+
+  .dot.win-blue {
+    background: #1a56c4;
+    border-color: #3b82f6;
+    box-shadow: 0 0 14px rgba(26,86,196,0.7);
+    color: white;
+  }
+
+  .dot.win-red, .dot.win-blue {
+    cursor: pointer;
+  }
+  .dot.win-red:hover, .dot.win-blue:hover {
+    filter: brightness(1.25);
+    transform: scale(1.1);
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.18); }
+  }
+
+  /* WINNER MODAL */
+  .winner-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(4,10,28,0.88);
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+    animation: fadeIn .2s ease;
+  }
+
+  .winner-overlay.hidden { display: none; }
+
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  .winner-modal {
+    background: linear-gradient(160deg, #0d1b3e 0%, #060e22 100%);
+    border: 1px solid rgba(212,160,23,0.3);
+    border-radius: 18px;
+    padding: 28px 24px 24px;
+    width: min(340px, 90vw);
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+
+  .winner-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; letter-spacing: 4px;
+    color: var(--gold-bright);
+    text-align: center;
+  }
+
+  .winner-subtitle {
+    font-size: 13px; letter-spacing: 3px; color: var(--gray);
+    text-transform: uppercase; text-align: center; margin-top: -10px;
+  }
+
+  .winner-btns {
+    display: flex; gap: 12px; width: 100%;
+  }
+
+  .winner-btn {
+    flex: 1;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: 2px;
+    padding: 18px 10px;
+    border-radius: 10px;
+    border: none; cursor: pointer;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .winner-btn-red {
+    background: linear-gradient(135deg, #c0392b, #922b21);
+    color: white;
+    box-shadow: 0 4px 18px rgba(192,57,43,0.4);
+  }
+  .winner-btn-red:hover { box-shadow: 0 6px 24px rgba(192,57,43,0.6); transform: translateY(-1px); }
+
+  .winner-btn-blue {
+    background: linear-gradient(135deg, #1a56c4, #1340a0);
+    color: white;
+    box-shadow: 0 4px 18px rgba(26,86,196,0.4);
+  }
+  .winner-btn-blue:hover { box-shadow: 0 6px 24px rgba(26,86,196,0.6); transform: translateY(-1px); }
+
+  .winner-btn-draw {
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    color: var(--gray);
+    border: 1px solid rgba(255,255,255,0.1);
+    font-size: 18px;
+    padding: 12px;
+    border-radius: 8px;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 2px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.15s;
+  }
+  .winner-btn-draw:hover { background: rgba(255,255,255,0.1); color: var(--white); }
+
+  /* SCOREBOARD */
+  .scoreboard {
+    display: flex; gap: 0; width: 100%;
+    border-radius: 10px; overflow: hidden;
+    border: 1px solid rgba(212,160,23,0.1);
+  }
+
+  .score-side {
+    flex: 1; padding: 10px 8px; text-align: center;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+
+  .score-side.red { background: rgba(192,57,43,0.15); border-right: 1px solid rgba(255,255,255,0.06); }
+  .score-side.blue { background: rgba(26,86,196,0.15); }
+
+  .score-label {
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    font-weight: 700;
+  }
+  .score-side.red .score-label { color: #e74c3c; }
+  .score-side.blue .score-label { color: #3b82f6; }
+
+  .score-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 38px; line-height: 1;
+  }
+  .score-side.red .score-num { color: #e74c3c; text-shadow: 0 0 12px rgba(231,76,60,0.5); }
+  .score-side.blue .score-num { color: #3b82f6; text-shadow: 0 0 12px rgba(59,130,246,0.5); }
+
+  /* Final winner highlight on scoreboard */
+  .score-side.winner-side {
+    animation: winner-side-pulse 1s ease-in-out infinite alternate;
+  }
+  .score-side.red.winner-side {
+    background: rgba(192,57,43,0.45);
+    box-shadow: inset 0 0 20px rgba(255,68,68,0.3), 0 0 20px rgba(255,68,68,0.3);
+  }
+  .score-side.blue.winner-side {
+    background: rgba(26,86,196,0.45);
+    box-shadow: inset 0 0 20px rgba(68,136,255,0.3), 0 0 20px rgba(68,136,255,0.3);
+  }
+  .score-side.winner-side .score-num {
+    font-size: 52px;
+  }
+  @keyframes winner-side-pulse {
+    0%   { filter: brightness(1); }
+    100% { filter: brightness(1.4); }
+  }
+
+  /* SETTINGS */
+  .settings-panel {
+    width: 100%;
+    background: rgba(13,27,62,0.6);
+    border: 1px solid rgba(212,160,23,0.15);
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .setting-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .setting-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray);
+    font-weight: 700;
+  }
+
+  .setting-controls { display: flex; align-items: center; gap: 8px; }
+
+  .setting-btn {
+    width: 30px; height: 30px;
+    border-radius: 6px;
+    border: 1px solid rgba(212,160,23,0.3);
+    background: rgba(212,160,23,0.08);
+    color: var(--gold);
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .setting-btn:hover, .setting-btn:active {
+    background: rgba(212,160,23,0.2);
+    border-color: var(--gold);
+    box-shadow: 0 0 8px rgba(212,160,23,0.3);
+  }
+
+  .setting-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    color: var(--white);
+    min-width: 36px;
+    text-align: center;
+  }
+
+  /* STATUS BAR */
+  .status-bar {
+    width: 100%;
+    background: rgba(13,27,62,0.5);
+    border: 1px solid rgba(212,160,23,0.1);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .status-item { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .status-item-label { font-size: 8px; letter-spacing: 2px; color: var(--gray); text-transform: uppercase; }
+  .status-item-value { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--gold-bright); }
+
+  /* CONTROLS */
+  .controls {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .hidden { display: none !important; }
+
+  .btn {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 3px;
+    padding: 13px 28px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--gold) 0%, #b8860b 100%);
+    color: var(--navy);
+    box-shadow: 0 4px 20px rgba(212,160,23,0.4);
+    flex: 1;
+    max-width: 200px;
+    min-width: 120px;
+    font-size: 26px;
+    padding: 15px 32px;
+  }
+
+  .btn-primary:hover { box-shadow: 0 6px 28px rgba(212,160,23,0.6); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.05);
+    color: var(--gray);
+    border: 1px solid rgba(255,255,255,0.1);
+    font-size: 16px;
+    padding: 13px 18px;
+  }
+
+  .btn-secondary:hover { background: rgba(255,255,255,0.1); color: var(--white); }
+
+  .btn-danger {
+    background: rgba(192,57,43,0.15);
+    color: #e74c3c;
+    border: 1px solid rgba(192,57,43,0.3);
+    font-size: 16px;
+    padding: 13px 18px;
+  }
+
+  .btn-danger:hover { background: rgba(192,57,43,0.25); }
+
+  /* ─── MODE COLORS ─── */
+  body.rest-mode .time-big { color: #2ecc71; }
+  body.rest-mode #progressRing { stroke: #2ecc71; }
+  body.warn-mode .time-big { color: #e74c3c; }
+  body.warn-mode #progressRing { stroke: #e74c3c; }
+  body:not(.rest-mode):not(.warn-mode) .time-big { color: var(--gold-bright); }
+  body:not(.rest-mode):not(.warn-mode) #progressRing { stroke: var(--gold-bright); }
+  body.paused .time-big { animation: blink 1s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:.45} 50%{opacity:1} }
+
+  /* PAUSE INDICATOR */
+  .pause-indicator {
+    position: absolute;
+    font-size: clamp(40px, 11vw, 72px);
+    color: var(--gold-bright);
+    text-shadow: 0 0 20px rgba(240,192,48,0.6);
+    animation: pulse-pause 1s ease-in-out infinite;
+    pointer-events: none;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(6,14,34,0.75);
+    border-radius: 50%;
+    width: 55%; height: 55%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pause-indicator.hidden { display: none !important; }
+  @keyframes pulse-pause { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* WINNER INDICATOR inside ring */
+  .winner-indicator {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 78%; height: 78%;
+    border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0;
+    pointer-events: none;
+    animation: winner-pop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
+  }
+  @keyframes winner-pop {
+    0%   { transform: translate(-50%,-50%) scale(0.3); opacity: 0; }
+    70%  { transform: translate(-50%,-50%) scale(1.08); opacity: 1; }
+    100% { transform: translate(-50%,-50%) scale(1);   opacity: 1; }
+  }
+  .winner-indicator.hidden { display: none !important; }
+  .winner-indicator .wi-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(9px, 2vw, 12px);
+    letter-spacing: 4px;
+    opacity: 0.85;
+    text-transform: uppercase;
+  }
+  .winner-indicator .wi-crown {
+    font-size: clamp(22px, 6vw, 36px);
+    line-height: 1;
+    animation: crown-bounce 0.6s ease infinite alternate;
+  }
+  @keyframes crown-bounce { 0%{transform:translateY(0)} 100%{transform:translateY(-4px)} }
+  .winner-indicator .wi-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(22px, 6.5vw, 42px);
+    letter-spacing: 2px;
+    line-height: 1;
+    text-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
+  }
+  .winner-indicator.red-win {
+    color: #ff4444;
+    background: radial-gradient(circle, rgba(192,57,43,0.45) 0%, rgba(192,57,43,0.08) 70%);
+    box-shadow: inset 0 0 30px rgba(192,57,43,0.3), 0 0 40px rgba(192,57,43,0.4);
+    border: 2px solid rgba(255,68,68,0.4);
+  }
+  .winner-indicator.blue-win {
+    color: #4488ff;
+    background: radial-gradient(circle, rgba(26,86,196,0.45) 0%, rgba(26,86,196,0.08) 70%);
+    box-shadow: inset 0 0 30px rgba(26,86,196,0.3), 0 0 40px rgba(26,86,196,0.4);
+    border: 2px solid rgba(68,136,255,0.4);
+  }
+
+  /* TOGGLE SWITCH */
+  .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; inset: 0;
+    background: rgba(255,255,255,0.1);
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.15);
+    cursor: pointer;
+    transition: .3s;
+  }
+  .toggle-slider:before {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    left: 2px; top: 2px;
+    background: var(--gray);
+    border-radius: 50%;
+    transition: .3s;
+  }
+  .toggle-switch input:checked + .toggle-slider { background: rgba(212,160,23,0.3); border-color: var(--gold); }
+  .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); background: var(--gold-bright); }
+
+  /* ─── FLASH & BEEPER ─── */
+  .flash {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0;
+  }
+  .flash.active { animation: flash-anim 0.5s forwards; }
+  @keyframes flash-anim { 0%{opacity:0.5} 100%{opacity:0} }
+
+  /* ─── AUDIO TOGGLE ─── */
+  .audio-toggle {
+    position: fixed;
+    top: 14px; right: 14px;
+    z-index: 20;
+    background: rgba(13,27,62,0.85);
+    border: 1px solid rgba(212,160,23,0.2);
+    border-radius: 20px;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--gray);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s;
+  }
+  .audio-toggle:hover { border-color: var(--gold); color: var(--gold); }
+  .audio-toggle.on { color: var(--gold); border-color: rgba(212,160,23,0.4); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(212,160,23,0.3); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="flash" id="flash"></div>
+
+<button class="theme-toggle" id="themeToggle" onclick="cycleTheme()" title="Cambiar color">🎨</button>
+<button class="fs-btn" id="fsToggle" onclick="toggleFullscreen()">⛶ FULL</button>
+<button class="audio-toggle on" id="audioToggle" onclick="toggleAudio()">
+  🔔 <span id="audioLabel">SON ON</span>
+</button>
+
+<!-- TAB NAV -->
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('clock', this)">⌚ RELOJ</button>
+  <button class="tab-btn" onclick="showTab('timer', this)">🥊 CRONÓMETRO</button>
+</nav>
+
+<!-- ══ VISTA RELOJ ══ -->
+<div id="view-clock" class="view active" style="width:100%;max-width:700px;">
+  <div class="clock-view">
+    <!-- Header -->
+    <div class="header">
+      <svg class="logo-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <g opacity="0.9">
+          <ellipse cx="52" cy="78" rx="18" ry="9" fill="#1a7a3c" transform="rotate(-35 52 78)"/>
+          <ellipse cx="38" cy="98" rx="18" ry="9" fill="#1a7a3c" transform="rotate(-50 38 98)"/>
+          <ellipse cx="30" cy="120" rx="16" ry="8" fill="#1a7a3c" transform="rotate(-65 30 120)"/>
+          <ellipse cx="60" cy="60" rx="16" ry="8" fill="#1a7a3c" transform="rotate(-20 60 60)"/>
+          <ellipse cx="72" cy="46" rx="14" ry="7" fill="#1a7a3c" transform="rotate(-5 72 46)"/>
+          <ellipse cx="148" cy="78" rx="18" ry="9" fill="#1a7a3c" transform="rotate(35 148 78)"/>
+          <ellipse cx="162" cy="98" rx="18" ry="9" fill="#1a7a3c" transform="rotate(50 162 98)"/>
+          <ellipse cx="170" cy="120" rx="16" ry="8" fill="#1a7a3c" transform="rotate(65 170 120)"/>
+          <ellipse cx="140" cy="60" rx="16" ry="8" fill="#1a7a3c" transform="rotate(20 140 60)"/>
+          <ellipse cx="128" cy="46" rx="14" ry="7" fill="#1a7a3c" transform="rotate(5 128 46)"/>
+          <circle cx="42" cy="90" r="5" fill="#c0392b"/>
+          <circle cx="35" cy="112" r="5" fill="#c0392b"/>
+          <circle cx="158" cy="90" r="5" fill="#c0392b"/>
+          <circle cx="165" cy="112" r="5" fill="#c0392b"/>
+          <circle cx="100" cy="35" r="4" fill="#c0392b"/>
+        </g>
+        <rect x="72" y="64" width="56" height="42" rx="8" fill="#0d1b3e"/>
+        <rect x="75" y="68" width="50" height="36" rx="6" fill="#d4a017"/>
+        <rect x="77" y="70" width="10" height="14" rx="4" fill="#f0c030"/>
+        <rect x="90" y="70" width="10" height="14" rx="4" fill="#f0c030"/>
+        <rect x="103" y="70" width="10" height="14" rx="4" fill="#f0c030"/>
+        <rect x="115" y="72" width="9" height="12" rx="4" fill="#f0c030"/>
+        <ellipse cx="118" cy="92" rx="8" ry="6" fill="#d4a017"/>
+        <path d="M55 138 Q100 148 145 138 L150 162 Q100 172 50 162 Z" fill="#0d1b3e"/>
+        <path d="M50 162 Q55 155 55 138" fill="#162050"/>
+        <path d="M150 162 Q145 155 145 138" fill="#162050"/>
+        <text x="100" y="157" text-anchor="middle" font-family="serif" font-size="14" fill="white">手武搏</text>
+      </svg>
+      <div class="header-text">
+        <div class="header-title">SOO BAHK DO</div>
+        <div class="header-sub">手武搏道 · Moo Duk Kwan</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- BIG CLOCK -->
+    <div class="big-clock-wrap">
+      <div class="big-clock-label">HORA ACTUAL</div>
+      <div class="big-clock" id="clockHM">--:--</div>
+      <span class="clock-sep">·</span>
+      <div class="clock-right">
+        <div class="big-clock-seconds" id="clockS">--</div>
+        <div class="clock-date" id="clockDate">...</div>
+      </div>
+    </div>
+
+    <div class="clock-decorline"></div>
+
+  </div>
+</div>
+
+<!-- ══ VISTA CRONÓMETRO ══ -->
+<div id="view-timer" class="view" style="width:100%;">
+  <div class="app">
+
+    <div class="header">
+      <svg class="logo-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <g opacity="0.9">
+          <ellipse cx="52" cy="78" rx="18" ry="9" fill="#1a7a3c" transform="rotate(-35 52 78)"/>
+          <ellipse cx="38" cy="98" rx="18" ry="9" fill="#1a7a3c" transform="rotate(-50 38 98)"/>
+          <ellipse cx="30" cy="120" rx="16" ry="8" fill="#1a7a3c" transform="rotate(-65 30 120)"/>
+          <ellipse cx="60" cy="60" rx="16" ry="8" fill="#1a7a3c" transform="rotate(-20 60 60)"/>
+          <ellipse cx="72" cy="46" rx="14" ry="7" fill="#1a7a3c" transform="rotate(-5 72 46)"/>
+          <ellipse cx="148" cy="78" rx="18" ry="9" fill="#1a7a3c" transform="rotate(35 148 78)"/>
+          <ellipse cx="162" cy="98" rx="18" ry="9" fill="#1a7a3c" transform="rotate(50 162 98)"/>
+          <ellipse cx="170" cy="120" rx="16" ry="8" fill="#1a7a3c" transform="rotate(65 170 120)"/>
+          <ellipse cx="140" cy="60" rx="16" ry="8" fill="#1a7a3c" transform="rotate(20 140 60)"/>
+          <ellipse cx="128" cy="46" rx="14" ry="7" fill="#1a7a3c" transform="rotate(5 128 46)"/>
+          <circle cx="42" cy="90" r="5" fill="#c0392b"/>
+          <circle cx="35" cy="112" r="5" fill="#c0392b"/>
+          <circle cx="158" cy="90" r="5" fill="#c0392b"/>
+          <circle cx="165" cy="112" r="5" fill="#c0392b"/>
+          <circle cx="100" cy="35" r="4" fill="#c0392b"/>
+        </g>
+        <rect x="72" y="64" width="56" height="42" rx="8" fill="#0d1b3e"/>
+        <rect x="75" y="68" width="50" height="36" rx="6" fill="#d4a017"/>
+        <rect x="77" y="70" width="10" height="14" rx="4" fill="#f0c030"/>
+        <rect x="90" y="70" width="10" height="14" rx="4" fill="#f0c030"/>
+        <rect x="103" y="70" width="10" height="14" rx="4" fill="#f0c030"/>
+        <rect x="115" y="72" width="9" height="12" rx="4" fill="#f0c030"/>
+        <ellipse cx="118" cy="92" rx="8" ry="6" fill="#d4a017"/>
+        <path d="M55 138 Q100 148 145 138 L150 162 Q100 172 50 162 Z" fill="#0d1b3e"/>
+        <path d="M50 162 Q55 155 55 138" fill="#162050"/>
+        <path d="M150 162 Q145 155 145 138" fill="#162050"/>
+        <text x="100" y="157" text-anchor="middle" font-family="serif" font-size="14" fill="white">手武搏</text>
+      </svg>
+      <div class="header-text">
+        <div class="header-title">CRONÓMETRO</div>
+        <div class="header-sub">手武搏道 · Control de Rounds</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- LANDSCAPE LAYOUT: left col = ring+score+dots, right col = settings+controls -->
+    <div class="timer-left">
+    <!-- RING TIMER ONLY -->
+    <div class="ring-container">
+      <svg viewBox="0 0 200 200">
+        <defs>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <circle class="ring-bg" cx="100" cy="100" r="82"/>
+        <circle class="ring-track" cx="100" cy="100" r="82"/>
+        <circle id="progressRing" cx="100" cy="100" r="82"
+          stroke-dasharray="515" stroke-dashoffset="0"/>
+      </svg>
+      <div class="ring-inner">
+        <div class="round-label" id="roundLabel">ROUND 1</div>
+        <div class="time-big" id="timeDisplay">2:00</div>
+        <div class="phase-label" id="phaseLabel">LISTO</div>
+        <div class="pause-indicator hidden" id="pauseIndicator">⏸</div>
+        <div class="winner-indicator hidden" id="winnerIndicator"></div>
+      </div>
+    </div>
+    </div><!-- /timer-left -->
+
+    <div class="timer-right">
+    <!-- SCOREBOARD -->
+    <div class="scoreboard">
+      <div class="score-side red">
+        <div class="score-label">🔴 Rojo</div>
+        <div class="score-num" id="scoreRed">0</div>
+      </div>
+      <div class="score-side blue">
+        <div class="score-label">🔵 Azul</div>
+        <div class="score-num" id="scoreBlue">0</div>
+      </div>
+    </div>
+
+    <!-- ROUND DOTS -->
+    <div class="round-dots" id="roundDots"></div>
+    <!-- SETTINGS -->
+    <div class="settings-panel">
+      <div class="setting-item">
+        <div class="setting-label">Rounds</div>
+        <div class="setting-controls">
+          <button class="setting-btn" onclick="adj('rounds',-1)">−</button>
+          <div class="setting-value" id="setRounds">5</div>
+          <button class="setting-btn" onclick="adj('rounds',1)">+</button>
+        </div>
+      </div>
+      <div class="setting-item">
+        <div class="setting-label">Tiempo (seg)</div>
+        <div class="setting-controls">
+          <button class="setting-btn" onclick="adj('roundTime',-30)">−</button>
+          <div class="setting-value" id="setRoundTime">120</div>
+          <button class="setting-btn" onclick="adj('roundTime',30)">+</button>
+        </div>
+      </div>
+      <div class="setting-item">
+        <div class="setting-label">Descanso</div>
+        <div class="setting-controls" style="flex-direction:column;gap:4px">
+          <label class="toggle-switch">
+            <input type="checkbox" id="restToggle" onchange="toggleRest(this)">
+            <span class="toggle-slider"></span>
+          </label>
+          <div style="display:flex;align-items:center;gap:6px;opacity:1" id="restControls">
+            <button class="setting-btn" onclick="adj('restTime',-15)" style="opacity:0.4;pointer-events:none" id="restMinus">−</button>
+            <div class="setting-value" id="setRestTime" style="opacity:0.4">60</div>
+            <button class="setting-btn" onclick="adj('restTime',15)" style="opacity:0.4;pointer-events:none" id="restPlus">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATUS -->
+    <div class="status-bar">
+      <div class="status-item">
+        <div class="status-item-label">Round</div>
+        <div class="status-item-value" id="statRound">1/3</div>
+      </div>
+      <div class="status-item">
+        <div class="status-item-label">Fase</div>
+        <div class="status-item-value" id="statPhase">ESPERA</div>
+      </div>
+      <div class="status-item">
+        <div class="status-item-label">Tiempo Total</div>
+        <div class="status-item-value" id="statTotal">0:00</div>
+      </div>
+      <div class="status-item">
+        <div class="status-item-label">Completados</div>
+        <div class="status-item-value" id="statDone">0</div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls" id="controlsNormal">
+      <button class="btn btn-danger" onclick="resetTimer()">RESET</button>
+      <button class="btn btn-primary" id="mainBtn" onclick="toggleTimer()">INICIAR</button>
+      <button class="btn btn-secondary" onclick="skipPhase()">SALTAR</button>
+    </div>
+    <div class="controls hidden" id="controlsDone">
+      <button class="btn btn-primary" style="max-width:280px;width:100%;font-size:28px;padding:18px 0;letter-spacing:4px" onclick="resetTimer()">LIMPIAR</button>
+    </div>
+    </div><!-- /timer-right -->
+
+  </div>
+</div>
+
+<!-- TIE BREAKER MODAL -->
+<div class="winner-overlay hidden" id="tieModal">
+  <div class="winner-modal" style="gap:20px">
+    <div class="winner-title" style="color:var(--gold-bright)">⚖️ EMPATE</div>
+    <div class="winner-subtitle">Round extra de desempate</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:100%">
+      <div style="font-size:10px;letter-spacing:3px;color:var(--gray);text-transform:uppercase">Duración (segundos)</div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <button class="setting-btn" style="width:36px;height:36px;font-size:22px" onclick="adjTie(-30)">−</button>
+        <div class="setting-value" id="tieSecs" style="font-size:36px;min-width:60px;text-align:center">60</div>
+        <button class="setting-btn" style="width:36px;height:36px;font-size:22px" onclick="adjTie(30)">+</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;width:100%">
+      <button class="winner-btn winner-btn-blue" style="flex:1;font-size:18px" onclick="startTieBreaker()">▶ INICIAR EXTRA</button>
+    </div>
+    <button class="winner-btn-draw" onclick="document.getElementById('tieModal').classList.add('hidden');document.getElementById('controlsDone').classList.remove('hidden')">Terminar igual</button>
+  </div>
+</div>
+
+<!-- WINNER MODAL -->
+<div class="winner-overlay hidden" id="winnerOverlay">
+  <div class="winner-modal">
+    <div class="winner-title">⚔️ FIN DEL ROUND</div>
+    <div class="winner-subtitle" id="winnerRoundLabel">Round 1 — ¿Quién ganó?</div>
+    <div class="winner-btns">
+      <button class="winner-btn winner-btn-red" onclick="assignWinner('red')">🔴 ROJO</button>
+      <button class="winner-btn winner-btn-blue" onclick="assignWinner('blue')">🔵 AZUL</button>
+    </div>
+    <button class="winner-btn-draw hidden" id="drawBtn" onclick="assignWinner('draw')">= EMPATE</button>
+  </div>
+</div>
+
+<script>
+  // ─── FULLSCREEN ───
+  function toggleFullscreen() {
+    const btn = document.getElementById('fsToggle');
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      const el = document.documentElement;
+      const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+      if (req) req.call(el, { navigationUI: 'hide' });
+    } else {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+      if (exit) exit.call(document);
+    }
+  }
+
+  document.addEventListener('fullscreenchange', updateFsBtn);
+  document.addEventListener('webkitfullscreenchange', updateFsBtn);
+
+  function updateFsBtn() {
+    const btn = document.getElementById('fsToggle');
+    const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    btn.classList.toggle('active', isFs);
+    btn.innerHTML = isFs ? '✕ SALIR' : '⛶ FULL';
+  }
+
+  // ─── COLOR THEMES ───
+  const themes = ['', 'theme-red', 'theme-green', 'theme-purple', 'theme-day'];
+  const themeLabels = ['🌑', '🔴', '🟢', '🟣', '☀️'];
+  let themeIdx = 0;
+
+  function cycleTheme() {
+    document.body.classList.remove(themes[themeIdx]);
+    themeIdx = (themeIdx + 1) % themes.length;
+    if (themes[themeIdx]) document.body.classList.add(themes[themeIdx]);
+    document.getElementById('themeToggle').textContent = themeLabels[themeIdx];
+  }
+
+  // ─── WAKE LOCK ───
+  let wakeLock = null;
+
+  async function requestWakeLock() {
+    if ('wakeLock' in navigator) {
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => { wakeLock = null; });
+      } catch(e) {}
+    }
+  }
+
+  function releaseWakeLock() {
+    if (wakeLock) { wakeLock.release(); wakeLock = null; }
+  }
+
+  // Re-acquire wake lock when page becomes visible again
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') requestWakeLock();
+  });
+
+  // Always keep wake lock active (both clock and timer views)
+  requestWakeLock();
+  function showTab(tab, btn) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('view-' + tab).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ─── AUDIO ───
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  let actx = null;
+  const audioState = { on: true };
+
+  function getACtx() {
+    if (!actx) actx = new AudioCtx();
+    return actx;
+  }
+
+  function beep(freq=440, dur=0.18, vol=0.4, type='square') {
+    if (!audioState.on) return;
+    try {
+      const ctx = getACtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = type; osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(vol, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + dur);
+    } catch(e){}
+  }
+
+  function seq(notes) { notes.forEach(([f,d,t,v,tp]) => setTimeout(()=>beep(f,d,v||0.4,tp||'sine'),t)); }
+  function bellStart()   { seq([[880,.15,0,.5],[1100,.15,180,.5],[1320,.3,360,.6]]); }
+  function bellEnd()     { seq([[660,.2,0,.5],[550,.2,220,.5],[440,.4,440,.6]]); }
+  function bellWarn()    { seq([[880,.1,0,.35,'square'],[880,.1,200,.35,'square'],[880,.1,400,.35,'square']]); }
+  function bellFinish()  { seq([[880,.15,0,.5],[1100,.15,200,.5],[1320,.15,400,.5],[1100,.15,600,.4],[880,.4,800,.6]]); }
+
+  function toggleAudio() {
+    audioState.on = !audioState.on;
+    document.getElementById('audioToggle').classList.toggle('on', audioState.on);
+    document.getElementById('audioLabel').textContent = audioState.on ? 'SON ON' : 'SON OFF';
+  }
+
+  // ─── CLOCK ───
+  const DAYS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  function updateClock() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById('clockHM').textContent = `${h}:${m}`;
+    document.getElementById('clockS').textContent = s;
+    document.getElementById('clockDate').textContent =
+      `${DAYS[now.getDay()]} ${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // ─── TIMER STATE ───
+  const cfg = { rounds: 5, roundTime: 120, restTime: 60, restEnabled: false };
+  let state = {
+    running: false, phase: 'idle',
+    current: 0, timeLeft: 0,
+    totalElapsed: 0, roundsDone: 0,
+    intervalId: null, totalIntervalId: null,
+    scores: [], // 'red'|'blue'|'draw' per round
+    pendingWinner: false, editingRound: null, isTieBreaker: false
+  };
+
+  // SETTINGS
+  function adj(key, delta) {
+    if (state.running || state.phase !== 'idle') return;
+    if (key === 'rounds') cfg.rounds = Math.max(1, Math.min(12, cfg.rounds + delta));
+    if (key === 'roundTime') cfg.roundTime = Math.max(30, Math.min(1800, cfg.roundTime + delta));
+    if (key === 'restTime') cfg.restTime = Math.max(15, Math.min(300, cfg.restTime + delta));
+    document.getElementById('setRounds').textContent = cfg.rounds;
+    document.getElementById('setRoundTime').textContent = cfg.roundTime;
+    document.getElementById('setRestTime').textContent = cfg.restTime;
+    updateStatBar(); buildDots();
+    state.timeLeft = cfg.roundTime;
+    renderTime(state.timeLeft);
+    updateRing(state.timeLeft, cfg.roundTime);
+  }
+
+  function toggleRest(cb) {
+    if (state.running || state.phase !== 'idle') { cb.checked = cfg.restEnabled; return; }
+    cfg.restEnabled = cb.checked;
+    const op = cfg.restEnabled ? '1' : '0.4';
+    const pe = cfg.restEnabled ? 'auto' : 'none';
+    document.getElementById('restMinus').style.opacity = op;
+    document.getElementById('restMinus').style.pointerEvents = pe;
+    document.getElementById('restPlus').style.opacity = op;
+    document.getElementById('restPlus').style.pointerEvents = pe;
+    document.getElementById('setRestTime').style.opacity = op;
+  }
+
+  // DOTS
+  function buildDots() {
+    const c = document.getElementById('roundDots');
+    c.innerHTML = '';
+    for (let i = 0; i < cfg.rounds; i++) {
+      const d = document.createElement('div');
+      d.className = 'dot'; d.id = `dot_${i}`;
+      // Triple tap detection
+      let tapCount = 0, tapTimer = null;
+      d.addEventListener('click', () => {
+        // Only allow on finished rounds
+        if (!state.scores[i]) return;
+        tapCount++;
+        clearTimeout(tapTimer);
+        tapTimer = setTimeout(() => { tapCount = 0; }, 600);
+        if (tapCount >= 3) {
+          tapCount = 0;
+          clearTimeout(tapTimer);
+          showChangeWinnerModal(i);
+        }
+      });
+      c.appendChild(d);
+    }
+  }
+
+  function updateDots() {
+    for (let i = 0; i < cfg.rounds; i++) {
+      const d = document.getElementById(`dot_${i}`);
+      if (!d) continue;
+      d.className = 'dot';
+      if (state.scores[i] === 'red')  { d.classList.add('win-red');  d.textContent = 'R'; }
+      else if (state.scores[i] === 'blue') { d.classList.add('win-blue'); d.textContent = 'A'; }
+      else if (state.scores[i] === 'draw') { d.classList.add('win-draw'); d.textContent = '='; }
+      else if (i === state.current && state.phase === 'round') { d.classList.add('active'); d.textContent = ''; }
+      else { d.textContent = ''; }
+    }
+  }
+
+  function updateScoreboard() {
+    const red  = state.scores.filter(s=>s==='red').length;
+    const blue = state.scores.filter(s=>s==='blue').length;
+    document.getElementById('scoreRed').textContent  = red;
+    document.getElementById('scoreBlue').textContent = blue;
+  }
+
+  function showChangeWinnerModal(roundIndex) {
+    state.editingRound = roundIndex;
+    document.getElementById('winnerRoundLabel').textContent =
+      `Round ${roundIndex + 1} — ¿Cambiar ganador?`;
+    // Draw allowed if it was the last round of a single-round fight
+    const isLastRound = (roundIndex === cfg.rounds - 1);
+    document.getElementById('drawBtn').classList.toggle('hidden', !isLastRound);
+    document.getElementById('winnerOverlay').classList.remove('hidden');
+  }
+
+  function showWinnerModal(roundNum) {
+    state.editingRound = null;
+    document.getElementById('winnerRoundLabel').textContent = `Round ${roundNum} — ¿Quién ganó?`;
+    // Show draw option only on last round (final result needed)
+    const isLastRound = state.roundsDone >= cfg.rounds;
+    document.getElementById('drawBtn').classList.toggle('hidden', !isLastRound);
+    document.getElementById('winnerOverlay').classList.remove('hidden');
+  }
+
+  function winnerHTML(label, cls, text) {
+    return '<span class="wi-label">' + label + '</span><span class="wi-crown">👑</span><span class="wi-name">' + text + '</span>';
+  }
+  function showWinnerInRing(who) {
+    const wi = document.getElementById('winnerIndicator');
+    wi.classList.remove('hidden','red-win','blue-win');
+    if (who === 'red') {
+      wi.classList.add('red-win');
+      wi.innerHTML = winnerHTML('GANADOR','red-win','🔴 ROJO');
+    } else if (who === 'blue') {
+      wi.classList.add('blue-win');
+      wi.innerHTML = winnerHTML('GANADOR','blue-win','🔵 AZUL');
+    } else {
+      wi.innerHTML = '<span class="wi-label" style="color:var(--gold)">RESULTADO</span><span class="wi-crown">⚖️</span><span class="wi-name" style="color:var(--gold);text-shadow:0 0 20px gold">EMPATE</span>';
+    }
+    setTimeout(() => wi.classList.add('hidden'), cfg.restEnabled ? cfg.restTime * 1000 - 500 : 3500);
+  }
+
+  function assignWinner(who) {
+    document.getElementById('winnerOverlay').classList.add('hidden');
+
+    // EDIT MODE — just update that round's score
+    if (state.editingRound !== null && state.editingRound !== undefined) {
+      state.scores[state.editingRound] = who;
+      state.editingRound = null;
+      updateDots();
+      updateScoreboard();
+      // Update final winner if session is done
+      if (state.phase === 'done') {
+        const red  = state.scores.filter(s=>s==='red').length;
+        const blue = state.scores.filter(s=>s==='blue').length;
+        const wi = document.getElementById('winnerIndicator');
+        wi.classList.remove('hidden','red-win','blue-win');
+        if (red > blue) { wi.classList.add('red-win'); wi.innerHTML = winnerHTML('GANADOR FINAL','red-win','🔴 ROJO'); }
+        else if (blue > red) { wi.classList.add('blue-win'); wi.innerHTML = winnerHTML('GANADOR FINAL','blue-win','🔵 AZUL'); }
+        else { wi.innerHTML = '<span class="wi-label" style="color:var(--gold)">EMPATE</span><span class="wi-name" style="color:var(--gold)">🏆</span>'; }
+      }
+      return;
+    }
+
+    // NORMAL MODE — end of round
+    state.scores[state.roundsDone - 1] = who;
+    updateDots();
+    updateScoreboard();
+    showWinnerInRing(who);
+    state.pendingWinner = false;
+    if (state.roundsDone >= cfg.rounds) {
+      endSession();
+    } else if (cfg.restEnabled) {
+      state.current++;
+      startRest();
+    } else {
+      state.current++;
+      state.phase = 'ready';
+      state.running = false;
+      state.timeLeft = cfg.roundTime;
+      renderTime(state.timeLeft);
+      updateRing(state.timeLeft, cfg.roundTime);
+      document.getElementById('roundLabel').textContent = `ROUND ${state.current + 1}`;
+      document.getElementById('phaseLabel').textContent = 'LISTO';
+      document.getElementById('mainBtn').textContent = 'INICIAR';
+      updateDots();
+    }
+  }
+
+  // RENDER
+  function renderTime(s) {
+    const m = Math.floor(s / 60), sc = s % 60;
+    document.getElementById('timeDisplay').textContent = `${m}:${String(sc).padStart(2,'0')}`;
+  }
+
+  function updateRing(cur, tot) {
+    const frac = tot > 0 ? cur / tot : 1;
+    document.getElementById('progressRing').style.strokeDashoffset = 515 * (1 - frac);
+  }
+
+  function updateStatBar() {
+    document.getElementById('statRound').textContent = `${state.current+1}/${cfg.rounds}`;
+    document.getElementById('statPhase').textContent =
+      state.phase==='round'?'COMBATE':state.phase==='rest'?'DESCANSO':state.phase==='done'?'FIN':'ESPERA';
+    document.getElementById('statDone').textContent = state.roundsDone;
+    document.getElementById('roundLabel').textContent =
+      state.phase==='rest'?'DESCANSO':`ROUND ${state.current+1}`;
+  }
+
+  function updateTotalTime() {
+    const m = Math.floor(state.totalElapsed/60), s = state.totalElapsed%60;
+    document.getElementById('statTotal').textContent = `${m}:${String(s).padStart(2,'0')}`;
+  }
+
+  function doFlash(color) {
+    const f = document.getElementById('flash');
+    f.style.background = color;
+    f.classList.remove('active'); void f.offsetWidth; f.classList.add('active');
+  }
+
+  function fmtSec(s) {
+    const m = Math.floor(s/60), sc = s%60;
+    return sc === 0 ? `${m}:00` : `${m}:${String(sc).padStart(2,'0')}`;
+  }
+
+  // ROUND LOGIC
+  function startRound() {
+    state.phase = 'round';
+    state.timeLeft = cfg.roundTime;
+    document.body.className = '';
+    document.getElementById('phaseLabel').textContent = 'COMBATE';
+    document.getElementById('mainBtn').textContent = 'PAUSAR';
+    updateStatBar(); updateRing(state.timeLeft, cfg.roundTime);
+    bellStart(); doFlash('rgba(212,160,23,0.3)');
+  }
+
+  function startRest() {
+    state.phase = 'rest';
+    state.timeLeft = cfg.restTime;
+    document.body.className = 'rest-mode';
+    document.getElementById('phaseLabel').textContent = 'DESCANSO';
+    document.getElementById('roundLabel').textContent = 'DESCANSO';
+    updateStatBar(); updateRing(state.timeLeft, cfg.restTime);
+    bellEnd(); doFlash('rgba(26,122,60,0.3)');
+  }
+
+  function endSession() {
+    state.phase = 'done'; state.running = false;
+    document.body.className = '';
+    clearInterval(state.intervalId); clearInterval(state.totalIntervalId);
+    document.getElementById('mainBtn').textContent = 'INICIAR';
+    document.getElementById('phaseLabel').textContent = 'FIN';
+    document.getElementById('timeDisplay').textContent = '0:00';
+    document.getElementById('progressRing').style.strokeDashoffset = 515;
+    bellFinish(); doFlash('rgba(192,57,43,0.4)');
+    updateStatBar();
+    document.getElementById('controlsNormal').classList.add('hidden');
+    // Final scores
+    const red  = state.scores.filter(s=>s==='red').length;
+    const blue = state.scores.filter(s=>s==='blue').length;
+    const sRed  = document.querySelector('.score-side.red');
+    const sBlue = document.querySelector('.score-side.blue');
+    sRed.classList.remove('winner-side'); sBlue.classList.remove('winner-side');
+    if (red > blue)       sRed.classList.add('winner-side');
+    else if (blue > red)  sBlue.classList.add('winner-side');
+    const wi = document.getElementById('winnerIndicator');
+    wi.classList.remove('hidden','red-win','blue-win');
+    if (red > blue) {
+      wi.classList.add('red-win');
+      wi.innerHTML = winnerHTML('🏆 CAMPEÓN','red-win','🔴 ROJO');
+      document.getElementById('controlsDone').classList.remove('hidden');
+    } else if (blue > red) {
+      wi.classList.add('blue-win');
+      wi.innerHTML = winnerHTML('🏆 CAMPEÓN','blue-win','🔵 AZUL');
+      document.getElementById('controlsDone').classList.remove('hidden');
+    } else {
+      wi.innerHTML = '<span class="wi-label" style="color:var(--gold)">⚖️ EMPATE</span><span class="wi-crown">⚖️</span><span class="wi-name" style="color:var(--gold);text-shadow:0 0 20px gold">IGUAL</span>';
+      setTimeout(() => { document.getElementById('tieModal').classList.remove('hidden'); }, 1200);
+    }
+  }
+
+  // ─── TIE BREAKER ───
+  let tieCfg = { secs: 60 };
+
+  function adjTie(delta) {
+    tieCfg.secs = Math.max(30, Math.min(600, tieCfg.secs + delta));
+    document.getElementById('tieSecs').textContent = tieCfg.secs;
+  }
+
+  function startTieBreaker() {
+    document.getElementById('tieModal').classList.add('hidden');
+    document.getElementById('winnerIndicator').classList.add('hidden');
+    // Prepare state — wait for user to press INICIAR
+    state.phase = 'ready';
+    state.isTieBreaker = true;
+    state.running = false;
+    state.timeLeft = tieCfg.secs;
+    cfg.roundTime = tieCfg.secs;
+    state.current = state.roundsDone;
+    document.body.className = '';
+    document.getElementById('roundLabel').textContent = 'EXTRA';
+    document.getElementById('phaseLabel').textContent = 'LISTO';
+    document.getElementById('mainBtn').textContent = 'INICIAR';
+    renderTime(state.timeLeft);
+    updateRing(state.timeLeft, tieCfg.secs);
+    // Add visual extra dot
+    const c = document.getElementById('roundDots');
+    const d = document.createElement('div');
+    d.className = 'dot'; d.id = 'dot_extra';
+    d.style.border = '3px solid var(--gold)';
+    d.style.boxShadow = '0 0 10px var(--gold)';
+    c.appendChild(d);
+    document.getElementById('controlsNormal').classList.remove('hidden');
+    document.getElementById('controlsDone').classList.add('hidden');
+    // Clear stale interval from finished session
+    clearInterval(state.intervalId);
+    state.intervalId = null;
+  }
+
+  function tick() {
+    if (!state.running) return;
+    state.timeLeft--;
+    renderTime(state.timeLeft);
+    const tot = state.phase === 'round' ? cfg.roundTime : cfg.restTime;
+    updateRing(state.timeLeft, tot);
+    if (state.timeLeft === 10) { document.body.classList.add('warn-mode'); bellWarn(); }
+    if (state.timeLeft <= 0) {
+      if (state.phase === 'round') {
+        state.running = false;
+        state.roundsDone++;
+        state.pendingWinner = true;
+        document.getElementById('mainBtn').textContent = 'REANUDAR';
+        showWinnerModal(state.roundsDone);
+      } else if (state.phase === 'rest') {
+        document.body.className = '';
+        state.phase = 'ready';
+        state.running = false;
+        state.timeLeft = cfg.roundTime;
+        renderTime(state.timeLeft);
+        updateRing(state.timeLeft, cfg.roundTime);
+        document.getElementById('roundLabel').textContent = `ROUND ${state.current + 1}`;
+        document.getElementById('phaseLabel').textContent = 'LISTO';
+        document.getElementById('mainBtn').textContent = 'INICIAR';
+        updateDots();
+      }
+    }
+  }
+
+  function toggleTimer() {
+    if (state.phase === 'idle' || state.phase === 'ready') {
+      state.running = true;
+      if (state.phase === 'idle') {
+        state.current = 0;
+        state.roundsDone = 0;
+        state.totalElapsed = 0;
+        buildDots();
+        state.totalIntervalId = setInterval(()=>{ state.totalElapsed++; updateTotalTime(); }, 1000);
+      }
+      if (state.isTieBreaker) {
+        // Extra round: start directly without resetting timeLeft
+        state.isTieBreaker = false;
+        state.phase = 'round';
+        document.body.className = '';
+        document.getElementById('phaseLabel').textContent = 'COMBATE';
+        document.getElementById('mainBtn').textContent = 'PAUSAR';
+        updateStatBar();
+        updateRing(state.timeLeft, cfg.roundTime);
+        bellStart(); doFlash('rgba(212,160,23,0.3)');
+      } else {
+        startRound();
+      }
+      if (!state.intervalId) state.intervalId = setInterval(tick, 1000);
+      document.body.classList.remove('paused');
+      document.getElementById('winnerIndicator').classList.add('hidden');
+    } else if (state.phase === 'done') {
+      resetTimer();
+    } else if (state.running) {
+      state.running = false;
+      document.body.classList.add('paused');
+      document.getElementById('mainBtn').textContent = 'REANUDAR';
+      document.getElementById('phaseLabel').textContent = 'PAUSADO';
+      document.getElementById('pauseIndicator').classList.remove('hidden');
+    } else {
+      state.running = true;
+      document.body.classList.remove('paused');
+      document.getElementById('mainBtn').textContent = 'PAUSAR';
+      document.getElementById('phaseLabel').textContent = state.phase==='round'?'COMBATE':'DESCANSO';
+      document.getElementById('pauseIndicator').classList.add('hidden');
+    }
+    updateStatBar();
+  }
+
+  function resetTimer() {
+    state.running = false; state.phase = 'idle';
+    state.current = 0; state.roundsDone = 0; state.totalElapsed = 0;
+    state.scores = []; state.pendingWinner = false; state.isTieBreaker = false;
+    state.timeLeft = cfg.roundTime;
+    clearInterval(state.intervalId); clearInterval(state.totalIntervalId);
+    state.intervalId = null; state.totalIntervalId = null;
+    document.body.className = '';
+    document.getElementById('mainBtn').textContent = 'INICIAR';
+    document.getElementById('phaseLabel').textContent = 'LISTO';
+    document.getElementById('roundLabel').textContent = 'ROUND 1';
+    renderTime(state.timeLeft); updateRing(state.timeLeft, cfg.roundTime);
+    document.getElementById('scoreRed').textContent  = '0';
+    document.getElementById('scoreBlue').textContent = '0';
+    document.querySelector('.score-side.red').classList.remove('winner-side');
+    document.querySelector('.score-side.blue').classList.remove('winner-side');
+    document.getElementById('winnerOverlay').classList.add('hidden');
+    document.getElementById('tieModal').classList.add('hidden');
+    document.getElementById('pauseIndicator').classList.add('hidden');
+    document.getElementById('winnerIndicator').classList.add('hidden');
+    document.getElementById('controlsNormal').classList.remove('hidden');
+    document.getElementById('controlsDone').classList.add('hidden');
+    tieCfg.secs = 60;
+    document.getElementById('tieSecs').textContent = 60;
+    buildDots(); updateStatBar(); updateTotalTime();
+  }
+
+  function skipPhase() {
+    if (state.phase === 'idle' || state.phase === 'done') return;
+    state.timeLeft = 1; tick();
+  }
+
+  // INIT
+  buildDots();
+  updateStatBar();
+  state.timeLeft = cfg.roundTime;
+  renderTime(state.timeLeft);
+  updateRing(state.timeLeft, cfg.roundTime);
+  document.getElementById('setRoundTime').textContent = cfg.roundTime;
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
