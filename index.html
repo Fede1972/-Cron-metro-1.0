@@ -191,95 +191,85 @@
   }
 
   /* ══ VISTA RELOJ ══ */
+
+  /* Portrait y landscape base */
   .clock-view {
     width: 100%;
-    max-width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     flex: 1;
-    gap: 4px;
-    padding: 8px;
+    gap: 8px;
+    padding: 12px;
     box-sizing: border-box;
     overflow: hidden;
   }
 
   .big-clock-wrap {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
     width: 100%;
-    overflow: hidden;
+    flex-wrap: nowrap;
   }
 
   .clock-sep   { display: none; }
-  .clock-right { display: contents; }
   .big-clock-label { display: none; }
   .clock-decorline { display: none; }
 
-  /* PORTRAIT */
-  .big-clock {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(90px, 40vw, 300px);
-    letter-spacing: -2px;
-    color: var(--gold-bright);
-    text-shadow: 0 0 50px rgba(240,192,48,0.5);
-    line-height: 0.9;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-
-  .big-clock-seconds {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(44px, 15vw, 120px);
-    color: rgba(240,192,48,0.55);
-    letter-spacing: 3px;
-    line-height: 1;
-  }
-
-  .clock-date {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: clamp(11px, 3vw, 20px);
-    letter-spacing: 4px;
-    color: var(--gray);
-    font-weight: 600;
-    text-transform: uppercase;
-    text-align: center;
-    white-space: nowrap;
-  }
-
-  /* LANDSCAPE — reloj centrado, ocupa toda la pantalla */
-  @media (orientation: landscape) {
-    #view-clock {
-      width: 100%;
-      overflow: hidden;
+  /* PORTRAIT: HH:MM grande centrado, segundos y fecha debajo */
+  @media (orientation: portrait) {
+    .clock-view { flex-direction: column; }
+    .big-clock-wrap { flex-direction: column; align-items: center; gap: 0; }
+    .clock-right { display: contents; }
+    .big-clock {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(80px, 38vw, 280px);
+      letter-spacing: -2px;
+      color: var(--gold-bright);
+      text-shadow: 0 0 40px rgba(240,192,48,0.5);
+      line-height: 0.9;
+      font-variant-numeric: tabular-nums;
+      text-align: center;
     }
+    .big-clock-seconds {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(40px, 14vw, 110px);
+      color: rgba(240,192,48,0.55);
+      letter-spacing: 3px;
+      text-align: center;
+      line-height: 1;
+    }
+    .clock-date {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(11px, 3vw, 20px);
+      letter-spacing: 4px;
+      color: var(--gray);
+      font-weight: 600;
+      text-transform: uppercase;
+      text-align: center;
+    }
+  }
+
+  /* LANDSCAPE: todo en fila, centrado */
+  @media (orientation: landscape) {
+    #view-clock { overflow: hidden; }
     .clock-view {
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
       justify-content: center;
-      padding: 4px 8px;
-      gap: 0;
-      min-height: unset;
-      height: 100%;
-      width: 100%;
+      padding: 4px 20px;
+      gap: 10px;
     }
     .big-clock-wrap {
       flex-direction: row;
       align-items: baseline;
       justify-content: center;
       gap: 10px;
-      flex-wrap: nowrap;
-      width: 100%;
-    }
-    /* HH:MM — vh limita la altura, vw limita el ancho */
-    .big-clock {
-      font-size: clamp(48px, min(62vh, 45vw), 380px);
-      letter-spacing: -3px;
-      line-height: 1;
-      flex-shrink: 1;
+      flex: 0 0 auto;
     }
     .clock-right {
       display: flex !important;
@@ -290,14 +280,30 @@
       padding-bottom: 6px;
       flex-shrink: 0;
     }
+    /* Tamaño controlado por altura disponible */
+    .big-clock {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(50px, 60vh, 360px);
+      letter-spacing: -3px;
+      color: var(--gold-bright);
+      text-shadow: 0 0 40px rgba(240,192,48,0.5);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
     .big-clock-seconds {
-      font-size: clamp(24px, min(22vh, 16vw), 140px);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(26px, 24vh, 150px);
+      color: rgba(240,192,48,0.55);
       line-height: 1;
       letter-spacing: 1px;
     }
     .clock-date {
-      font-size: clamp(8px, min(2.2vh, 1.6vw), 16px);
-      letter-spacing: 2px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(9px, 2vh, 15px);
+      letter-spacing: 3px;
+      color: var(--gray);
+      font-weight: 600;
       white-space: nowrap;
     }
     #view-clock .header { display: none; }
@@ -1047,7 +1053,7 @@
 
 <div class="flash" id="flash"></div>
 
-<button class="theme-toggle" id="themeToggle" onclick="cycleTheme()" title="Cambiar color">🎨</button>
+<button class="top-bar-btn" id="themeToggle" onclick="cycleTheme()">🎨</button>
 <button class="fs-btn" id="fsToggle" onclick="toggleFullscreen()">⛶ FULL</button>
 <button class="audio-toggle on" id="audioToggle" onclick="toggleAudio()">
   🔔 <span id="audioLabel">SON ON</span>
