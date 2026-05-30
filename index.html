@@ -250,48 +250,55 @@
     white-space: nowrap;
   }
 
-  /* LANDSCAPE — HH:MM fills height, seconds right */
+  /* LANDSCAPE — reloj centrado, ocupa toda la pantalla */
   @media (orientation: landscape) {
+    #view-clock {
+      width: 100%;
+      overflow: hidden;
+    }
     .clock-view {
-      flex-direction: row;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 2px 8px;
-      gap: 6px;
+      padding: 4px 8px;
+      gap: 0;
       min-height: unset;
       height: 100%;
+      width: 100%;
     }
     .big-clock-wrap {
       flex-direction: row;
       align-items: baseline;
       justify-content: center;
-      gap: 6px;
+      gap: 10px;
       flex-wrap: nowrap;
-      width: auto;
+      width: 100%;
     }
+    /* HH:MM — vh limita la altura, vw limita el ancho */
     .big-clock {
-      /* Use vh: in landscape height is smaller, so this keeps it on screen */
-      font-size: clamp(50px, 64vh, 420px);
+      font-size: clamp(48px, min(62vh, 45vw), 380px);
       letter-spacing: -3px;
       line-height: 1;
+      flex-shrink: 1;
     }
     .clock-right {
       display: flex !important;
       flex-direction: column;
       align-items: flex-start;
       justify-content: flex-end;
-      gap: 3px;
-      padding-bottom: 8px;
+      gap: 2px;
+      padding-bottom: 6px;
       flex-shrink: 0;
     }
     .big-clock-seconds {
-      font-size: clamp(28px, 24vh, 160px);
+      font-size: clamp(24px, min(22vh, 16vw), 140px);
       line-height: 1;
       letter-spacing: 1px;
     }
     .clock-date {
-      font-size: clamp(8px, 2vh, 15px);
+      font-size: clamp(8px, min(2.2vh, 1.6vw), 16px);
       letter-spacing: 2px;
+      white-space: nowrap;
     }
     #view-clock .header { display: none; }
   }
