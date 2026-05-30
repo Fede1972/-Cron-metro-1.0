@@ -139,12 +139,13 @@
     position: relative;
     z-index: 1;
     width: 100%;
-    max-width: 700px;
-    padding: 16px 16px 40px;
+    max-width: 100%;
+    padding: 16px 16px 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
+    box-sizing: border-box;
   }
 
   /* ─── HEADER ─── */
@@ -192,6 +193,7 @@
   /* ══ VISTA RELOJ ══ */
   .clock-view {
     width: 100%;
+    max-width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1052,7 +1054,7 @@
 </nav>
 
 <!-- ══ VISTA RELOJ ══ -->
-<div id="view-clock" class="view active" style="width:100%;max-width:700px;">
+<div id="view-clock" class="view active" style="width:100%;max-width:100%;">
   <div class="clock-view">
     <!-- Header -->
     <div class="header">
@@ -1082,7 +1084,7 @@
 </div>
 
 <!-- ══ VISTA CRONÓMETRO ══ -->
-<div id="view-timer" class="view" style="width:100%;">
+<div id="view-timer" class="view" style="width:100%;max-width:100%;">
   <div class="app">
 
     <div class="header">
@@ -1774,7 +1776,7 @@
 </script>
 
 <!-- ══ VISTA BYEOUT ══ -->
-<div id="view-byeout" class="view" style="width:100%;max-width:700px;">
+<div id="view-byeout" class="view" style="width:100%;">
   <div class="app" style="gap:14px">
 
     <div class="header">
@@ -1828,6 +1830,7 @@
     overflow-x: auto;
     padding: 4px 0 12px;
     scrollbar-width: thin;
+    box-sizing: border-box;
   }
 
   .byeout-round {
@@ -1835,7 +1838,7 @@
     flex-direction: column;
     justify-content: space-around;
     flex: 1;
-    min-width: 118px;
+    min-width: max(100px, 22vw);
     gap: 0;
     position: relative;
   }
